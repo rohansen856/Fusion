@@ -40,7 +40,7 @@ from .models import (Achievement, ChairmanVisit, Course, Education, Experience, 
                      Has, NotifyStudent, Patent, PlacementRecord, Extracurricular, Reference,
                      PlacementSchedule, PlacementStatus, Project, Publication,
                      Skill, StudentPlacement, StudentRecord, Role, CompanyDetails,
-                     PlacementApplication,)
+                     PlacementApplication, RecruiterCompanyAccess,)
 '''
     @variables:
             user - logged in user
@@ -1901,14 +1901,64 @@ def placement_statistics(request):
     current1 = HoldsDesignation.objects.filter(Q(working=user, designation__name="placement chairman"))
     current2 = HoldsDesignation.objects.filter(Q(working=user, designation__name="placement officer"))
     current = HoldsDesignation.objects.filter(Q(working=user, designation__name="student"))
+    current3 = HoldsDesignation.objects.filter(Q(working=user, designation__name="recruiter"))
 
     if len(current1)!=0 or len(current2)!=0:
         delete_operation = 1
     if len(current) == 0:
         current = None
+    if len(current3) == 0:
+        current3 = None
+
+    if current3 and not (current1 or current2):
+        recruiter_company_names = list(
+            RecruiterCompanyAccess.objects.filter(recruiter=user).values_list('company_name', flat=True)
+        )
+        recruiter_applications = PlacementApplication.objects.select_related(
+            'student__id__user', 'record'
+        ).filter(
+            record__placement_type='PLACEMENT',
+            record__name__in=recruiter_company_names
+        ).order_by('-created_at')
+
+        context = {
+            'form2': form2,
+            'form3': form3,
+            'form4': form4,
+            'current': current,
+            'current1': current1,
+            'current2': current2,
+            'current3': current3,
+            'all_records': [],
+            'placement_search_record': " ",
+            'pbi_search_record': " ",
+            'higher_search_record': " ",
+            'statistics_tab': statistics_tab,
+            'pbirecord': '',
+            'placementrecord': '',
+            'higherrecord': '',
+            'years': [],
+            'records': [],
+            'delete_operation': 0,
+            'page_range': '',
+            'paginator': '',
+            'pagination_placement': 0,
+            'pagination_pbi': 0,
+            'pagination_higher': 0,
+            'is_disabled': 0,
+            'officer_statistics_past_pbi_search': 0,
+            'officer_statistics_past_higher_search': 0,
+            'applied_record_ids': [],
+            'applied_applications': [],
+            'recruiter_applications': recruiter_applications,
+            'recruiter_company_names': recruiter_company_names,
+            'is_recruiter_only': 1,
+        }
+        return render(request, 'placementModule/placementstatistics.html', context)
 
     applied_record_ids = []
     applied_applications = []
+    recruiter_applications = []
     student_obj = None
     if current:
         student_obj = get_object_or_404(Student, Q(id=profile.id))
@@ -1917,6 +1967,12 @@ def placement_statistics(request):
         )
         applied_applications = PlacementApplication.objects.select_related('record').filter(
             student=student_obj
+        ).order_by('-created_at')
+    elif current1 or current2:
+        recruiter_applications = PlacementApplication.objects.select_related(
+            'student__id__user', 'record'
+        ).filter(
+            record__placement_type='PLACEMENT'
         ).order_by('-created_at')
     pbirecord= ''
     placementrecord= ''
@@ -2490,6 +2546,7 @@ def placement_statistics(request):
         'current'           :          current,
         'current1'          :         current1,
         'current2'          :         current2,
+        'current3'          :         current3,
 
 
         'all_records':          all_records,   #for flashing all placement Schedule
@@ -2517,6 +2574,9 @@ def placement_statistics(request):
         'officer_statistics_past_higher_search': officer_statistics_past_higher_search,
         'applied_record_ids': applied_record_ids,
         'applied_applications': applied_applications,
+        'recruiter_applications': recruiter_applications,
+        'recruiter_company_names': [],
+        'is_recruiter_only': 0,
     }
 
     return render(request, 'placementModule/placementstatistics.html', context)
@@ -2558,6 +2618,46 @@ def apply_company(request):
     else:
         messages.info(request, 'You have already applied for this company.')
 
+    return redirect('/placement/statistics/')
+
+
+@login_required
+def update_application_status(request):
+    if request.method != 'POST':
+        return redirect('/placement/statistics/')
+
+    user = request.user
+    recruiter_role = HoldsDesignation.objects.filter(
+        Q(working=user, designation__name="recruiter")
+    )
+    if not recruiter_role:
+        messages.error(request, 'Only recruiters can update application status.')
+        return redirect('/placement/statistics/')
+
+    application_id = request.POST.get('application_id')
+    status_text = (request.POST.get('recruiter_status') or '').strip()
+    if not application_id:
+        messages.error(request, 'Invalid application.')
+        return redirect('/placement/statistics/')
+
+    try:
+        application = PlacementApplication.objects.select_related('record').get(pk=int(application_id))
+    except Exception:
+        messages.error(request, 'Application not found.')
+        return redirect('/placement/statistics/')
+
+    assigned_companies = list(
+        RecruiterCompanyAccess.objects.filter(recruiter=user).values_list('company_name', flat=True)
+    )
+    if application.record.name not in assigned_companies:
+        messages.error(request, 'You can only update applications for your assigned companies.')
+        return redirect('/placement/statistics/')
+
+    application.recruiter_status = status_text
+    application.status_updated_at = timezone.now()
+    application.save(update_fields=['recruiter_status', 'status_updated_at'])
+
+    messages.success(request, 'Application status updated.')
     return redirect('/placement/statistics/')
 
 

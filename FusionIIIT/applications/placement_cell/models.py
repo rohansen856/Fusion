@@ -4,6 +4,7 @@ import datetime
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django.contrib.auth.models import User
 
 from applications.academic_information.models import Student
 
@@ -413,6 +414,8 @@ class StudentPlacement(models.Model):
 class PlacementApplication(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     record = models.ForeignKey(PlacementRecord, on_delete=models.CASCADE)
+    recruiter_status = models.TextField(blank=True, default='')
+    status_updated_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -420,3 +423,15 @@ class PlacementApplication(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.student.id.id, self.record.name)
+
+
+class RecruiterCompanyAccess(models.Model):
+    recruiter = models.ForeignKey(User, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (('recruiter', 'company_name'),)
+
+    def __str__(self):
+        return '{} - {}'.format(self.recruiter.username, self.company_name)

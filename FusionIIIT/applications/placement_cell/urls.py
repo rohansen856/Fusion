@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^statistics/$', views.placement_statistics, name='placement_statistics'),
     url(r'^delete_placement_statistics/$', views.delete_placement_statistics, name='delete_placement_statistics'),
     url(r'^statistics/apply/$', views.apply_company, name='apply_company'),
+    url(r'^statistics/update-application-status/$', views.update_application_status, name='update_application_status'),
     url(r'^cv/(?P<username>[a-zA-Z0-9\.]{1,20})/$', views.cv, name="cv"),
 
 

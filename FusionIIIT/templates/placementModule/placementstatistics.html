@@ -156,6 +156,60 @@
 
         {% comment %} The central-rail segment starts here!{% endcomment %}
         <div class="eight wide column">
+                  {% if is_recruiter_only %}
+                  <div class="ui vertical segment">
+                      <h3 class="ui header">Recruiter Applications</h3>
+                      {% if recruiter_company_names %}
+                      <div class="ui message">
+                          Assigned companies:
+                          {% for cname in recruiter_company_names %}
+                              <span class="ui label">{{ cname }}</span>
+                          {% endfor %}
+                      </div>
+                      {% endif %}
+                      {% if recruiter_applications %}
+                      <table class="ui very basic celled table" style="margin: auto; width: 100%; table-layout: fixed; font-size: 0.95rem;">
+                          <thead>
+                              <tr>
+                                  <th style="width: 70px;">Student</th>
+                                  <th style="width: 90px;">Roll No.</th>
+                                  <th style="width: 90px;">Department</th>
+                                  <th style="width: 70px;">Company</th>
+                                  <th style="width: 55px;">Year</th>
+                                  <th style="width: 70px;">Package (LPA)</th>
+                                  <th style="width: 140px;">Applied On</th>
+                                  <th style="width: 360px;">Status</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for application in recruiter_applications %}
+                              <tr>
+                                  <td style="word-break: break-word;">{{ application.student.id.user.first_name }} {{ application.student.id.user.last_name }}</td>
+                                  <td style="word-break: break-word;">{{ application.student.id.id }}</td>
+                                  <td style="word-break: break-word;">{{ application.student.id.department.name }}</td>
+                                  <td style="word-break: break-word;">{{ application.record.name }}</td>
+                                  <td>{{ application.record.year }}</td>
+                                  <td>{{ application.record.ctc }}</td>
+                                  <td style="word-break: break-word;">{{ application.created_at }}</td>
+                                  <td>
+                                      <form method="post" action="{% url 'placement:update_application_status' %}" class="ui form" role="form">
+                                          {% csrf_token %}
+                                          <input type="hidden" name="application_id" value="{{ application.id }}">
+                                          <div class="field" style="margin-bottom: 6px;">
+                                              <input type="text" name="recruiter_status" value="{{ application.recruiter_status }}" placeholder="Enter status update" style="width: 100%;">
+                                          </div>
+                                          <button class="ui tiny primary button" type="submit">Save</button>
+                                      </form>
+                                  </td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                      {% else %}
+                      <div class="ui message">No applications found for your assigned company.</div>
+                      {% endif %}
+                  </div>
+                  {% else %}
                   {% comment %}The tab menu starts here!{% endcomment %}
                   <div class="ui pointing secondary menu">
                       <a class="active item" data-tab="pastrecords">
@@ -952,6 +1006,7 @@
                                   <th>Type</th>
                                   <th>Year</th>
                                   <th>Package (LPA)</th>
+                                  <th>Status</th>
                                   <th>Applied On</th>
                               </tr>
                           </thead>
@@ -962,6 +1017,13 @@
                                   <td>{{ application.record.placement_type }}</td>
                                   <td>{{ application.record.year }}</td>
                                   <td>{{ application.record.ctc }}</td>
+                                  <td>
+                                      {% if application.recruiter_status %}
+                                          {{ application.recruiter_status }}
+                                      {% else %}
+                                          Pending
+                                      {% endif %}
+                                  </td>
                                   <td>{{ application.created_at }}</td>
                               </tr>
                               {% endfor %}
@@ -971,6 +1033,51 @@
                       <div class="ui message">You have not applied to any company yet.</div>
                       {% endif %}
                   </div>
+                  {% endif %}
+
+                  {% if current1 or current2 or current3 %}
+                  <div class="ui vertical segment">
+                      <h3 class="ui header">Student Applications</h3>
+                      {% if recruiter_applications %}
+                      <table class="ui very basic collapsing celled table" style="margin: auto; width: 100%;">
+                          <thead>
+                              <tr>
+                                  <th>Student</th>
+                                  <th>Roll No.</th>
+                                  <th>Department</th>
+                                  <th>Company</th>
+                                  <th>Year</th>
+                                  <th>Package (LPA)</th>
+                                  <th>Status</th>
+                                  <th>Applied On</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for application in recruiter_applications %}
+                              <tr>
+                                  <td>{{ application.student.id.user.first_name }} {{ application.student.id.user.last_name }}</td>
+                                  <td>{{ application.student.id.id }}</td>
+                                  <td>{{ application.student.id.department.name }}</td>
+                                  <td>{{ application.record.name }}</td>
+                                  <td>{{ application.record.year }}</td>
+                                  <td>{{ application.record.ctc }}</td>
+                                  <td>
+                                      {% if application.recruiter_status %}
+                                          {{ application.recruiter_status }}
+                                      {% else %}
+                                          Pending
+                                      {% endif %}
+                                  </td>
+                                  <td>{{ application.created_at }}</td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                      {% else %}
+                      <div class="ui message">No student applications yet.</div>
+                      {% endif %}
+                  </div>
+                  {% endif %}
                   {% endif %}
         </div>
         {% comment %} The central-rail segment ends here!{% endcomment %}
