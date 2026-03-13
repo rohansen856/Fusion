@@ -862,6 +862,9 @@
                                       <th class="two wide">ME</th>
                                       <th class="two wide">Total</th>
                                       <th class="two wide">Package</th>
+                                      {% if current %}
+                                      <th class="two wide">Apply</th>
+                                      {% endif %}
                                   </tr>
                                   </thead>
 
@@ -882,6 +885,19 @@
                                       </td>
                                       <td>{{ record.ctc__count }}</td>
                                       <td>{{ record.ctc }}</td>
+                                      {% if current %}
+                                      <td>
+                                          {% if record.id in applied_record_ids %}
+                                              <button class="ui tiny disabled button" type="button">Applied</button>
+                                          {% else %}
+                                              <form method="post" action="{% url 'placement:apply_company' %}" class="ui form" role="form">
+                                                  {% csrf_token %}
+                                                  <input type="hidden" name="record_id" value="{{ record.id }}">
+                                                  <button class="ui tiny primary button" type="submit">Apply</button>
+                                              </form>
+                                          {% endif %}
+                                      </td>
+                                      {% endif %}
                                   </tr>
                                   {% endif %}
                                   {% endif %}
@@ -908,6 +924,9 @@
                                       <td>
 
                                       </td>
+                                      {% if current %}
+                                      <td></td>
+                                      {% endif %}
                                   </tr>
 
                                   </tbody>
@@ -921,6 +940,38 @@
 
                       </div>
                   </div>
+
+                  {% if current %}
+                  <div class="ui vertical segment">
+                      <h3 class="ui header">My Applications</h3>
+                      {% if applied_applications %}
+                      <table class="ui very basic collapsing celled table" style="margin: auto; width: 100%;">
+                          <thead>
+                              <tr>
+                                  <th>Company</th>
+                                  <th>Type</th>
+                                  <th>Year</th>
+                                  <th>Package (LPA)</th>
+                                  <th>Applied On</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for application in applied_applications %}
+                              <tr>
+                                  <td>{{ application.record.name }}</td>
+                                  <td>{{ application.record.placement_type }}</td>
+                                  <td>{{ application.record.year }}</td>
+                                  <td>{{ application.record.ctc }}</td>
+                                  <td>{{ application.created_at }}</td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                      </table>
+                      {% else %}
+                      <div class="ui message">You have not applied to any company yet.</div>
+                      {% endif %}
+                  </div>
+                  {% endif %}
         </div>
         {% comment %} The central-rail segment ends here!{% endcomment %}
 

@@ -10,47 +10,55 @@ from applications.academic_information.models import Student
 # Class definations:
 
 
+class ResumeType(models.TextChoices):
+    ONGOING = 'ONGOING', 'Ongoing'
+    COMPLETED = 'COMPLETED', 'Completed'
+
+
+class AchievementType(models.TextChoices):
+    EDUCATIONAL = 'EDUCATIONAL', 'Educational'
+    OTHER = 'OTHER', 'Other'
+
+
+class EventType(models.TextChoices):
+    SOCIAL = 'SOCIAL', 'Social'
+    CULTURE = 'CULTURE', 'Culture'
+    SPORT = 'SPORT', 'Sport'
+    OTHER = 'OTHER', 'Other'
+
+
+class InvitationType(models.TextChoices):
+    ACCEPTED = 'ACCEPTED', 'Accepted'
+    REJECTED = 'REJECTED', 'Rejected'
+    PENDING = 'PENDING', 'Pending'
+    IGNORE = 'IGNORE', 'IGNORE'
+
+
+class PlacementType(models.TextChoices):
+    PLACEMENT = 'PLACEMENT', 'Placement'
+    PBI = 'PBI', 'PBI'
+    HIGHER_STUDIES = 'HIGHER STUDIES', 'Higher Studies'
+    OTHER = 'OTHER', 'Other'
+
+
+class PlacedType(models.TextChoices):
+    NOT_PLACED = 'NOT PLACED', 'Not Placed'
+    PLACED = 'PLACED', 'Placed'
+
+
+class DebarType(models.TextChoices):
+    NOT_DEBAR = 'NOT DEBAR', 'Not Debar'
+    DEBAR = 'DEBAR', 'Debar'
+
+
 class Constants:
-    RESUME_TYPE = (
-        ('ONGOING', 'Ongoing'),
-        ('COMPLETED', 'Completed'),
-    )
-
-    ACHIEVEMENT_TYPE = (
-        ('EDUCATIONAL', 'Educational'),
-        ('OTHER', 'Other'),
-    )
-
-    EVENT_TYPE = (
-        ('SOCIAL', 'Social'),
-        ('CULTURE', 'Culture'),
-        ('SPORT', 'Sport'),
-        ('OTHER', 'Other'),
-    )
-
-    INVITATION_TYPE = (
-        ('ACCEPTED', 'Accepted'),
-        ('REJECTED', 'Rejected'),
-        ('PENDING', 'Pending'),
-        ('IGNORE', 'IGNORE'),
-    )
-
-    PLACEMENT_TYPE = (
-        ('PLACEMENT', 'Placement'),
-        ('PBI', 'PBI'),
-        ('HIGHER STUDIES', 'Higher Studies'),
-        ('OTHER', 'Other'),
-    )
-
-    PLACED_TYPE = (
-        ('NOT PLACED', 'Not Placed'),
-        ('PLACED', 'Placed'),
-    )
-
-    DEBAR_TYPE = (
-        ('NOT DEBAR', 'Not Debar'),
-        ('DEBAR', 'Debar'),
-    )
+    RESUME_TYPE = ResumeType.choices
+    ACHIEVEMENT_TYPE = AchievementType.choices
+    EVENT_TYPE = EventType.choices
+    INVITATION_TYPE = InvitationType.choices
+    PLACEMENT_TYPE = PlacementType.choices
+    PLACED_TYPE = PlacedType.choices
+    DEBAR_TYPE = DebarType.choices
 
     BTECH_DEP = (
         ('CSE', 'CSE'),
@@ -400,3 +408,15 @@ class StudentPlacement(models.Model):
 
     def __str__(self):
         return self.unique_id.id.id
+
+
+class PlacementApplication(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    record = models.ForeignKey(PlacementRecord, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (('student', 'record'),)
+
+    def __str__(self):
+        return '{} - {}'.format(self.student.id.id, self.record.name)

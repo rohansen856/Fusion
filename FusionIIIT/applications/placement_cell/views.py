@@ -39,7 +39,8 @@ from .forms import (AddAchievement, AddChairmanVisit, AddCourse, AddEducation,
 from .models import (Achievement, ChairmanVisit, Course, Education, Experience, Conference,
                      Has, NotifyStudent, Patent, PlacementRecord, Extracurricular, Reference,
                      PlacementSchedule, PlacementStatus, Project, Publication,
-                     Skill, StudentPlacement, StudentRecord, Role, CompanyDetails,)
+                     Skill, StudentPlacement, StudentRecord, Role, CompanyDetails,
+                     PlacementApplication,)
 '''
     @variables:
             user - logged in user
@@ -1849,7 +1850,7 @@ def placement_statistics(request):
     studentrecord = StudentRecord.objects.select_related('unique_id','record_id').all()
 
     years = PlacementRecord.objects.filter(~Q(placement_type="HIGHER STUDIES")).values('year').annotate(Count('year'))
-    records = PlacementRecord.objects.values('name', 'year', 'ctc', 'placement_type').annotate(Count('name'), Count('year'), Count('placement_type'), Count('ctc'))
+    records = PlacementRecord.objects.values('id', 'name', 'year', 'ctc', 'placement_type').annotate(Count('name'), Count('year'), Count('placement_type'), Count('ctc'))
 
 
 
@@ -1905,6 +1906,18 @@ def placement_statistics(request):
         delete_operation = 1
     if len(current) == 0:
         current = None
+
+    applied_record_ids = []
+    applied_applications = []
+    student_obj = None
+    if current:
+        student_obj = get_object_or_404(Student, Q(id=profile.id))
+        applied_record_ids = list(
+            PlacementApplication.objects.filter(student=student_obj).values_list('record_id', flat=True)
+        )
+        applied_applications = PlacementApplication.objects.select_related('record').filter(
+            student=student_obj
+        ).order_by('-created_at')
     pbirecord= ''
     placementrecord= ''
     higherrecord= ''
@@ -2501,10 +2514,51 @@ def placement_statistics(request):
         'pagination_higher': pagination_higher,
         'is_disabled': is_disabled,
         'officer_statistics_past_pbi_search': officer_statistics_past_pbi_search,
-        'officer_statistics_past_higher_search': officer_statistics_past_higher_search
+        'officer_statistics_past_higher_search': officer_statistics_past_higher_search,
+        'applied_record_ids': applied_record_ids,
+        'applied_applications': applied_applications,
     }
 
     return render(request, 'placementModule/placementstatistics.html', context)
+
+
+@login_required
+def apply_company(request):
+    if request.method != 'POST':
+        return redirect('/placement/statistics/')
+
+    user = request.user
+    profile = get_object_or_404(ExtraInfo, Q(user=user))
+    current = HoldsDesignation.objects.filter(Q(working=user, designation__name="student"))
+
+    if not current:
+        messages.error(request, 'Only students can apply for company records.')
+        return redirect('/placement/statistics/')
+
+    record_id = request.POST.get('record_id')
+    if not record_id:
+        messages.error(request, 'Invalid company record.')
+        return redirect('/placement/statistics/')
+
+    try:
+        record = PlacementRecord.objects.get(pk=int(record_id))
+    except Exception:
+        messages.error(request, 'Company record not found.')
+        return redirect('/placement/statistics/')
+
+    if record.placement_type != 'PLACEMENT':
+        messages.error(request, 'You can apply only for placement records.')
+        return redirect('/placement/statistics/')
+
+    student_obj = get_object_or_404(Student, Q(id=profile.id))
+    _, created = PlacementApplication.objects.get_or_create(student=student_obj, record=record)
+
+    if created:
+        messages.success(request, 'Application submitted successfully.')
+    else:
+        messages.info(request, 'You have already applied for this company.')
+
+    return redirect('/placement/statistics/')
 
 
 @login_required

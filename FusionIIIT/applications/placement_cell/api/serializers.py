@@ -1,10 +1,10 @@
-from rest_framework.authtoken.models import Token
 from rest_framework import serializers
 
 from applications.placement_cell.models import (Achievement, Course, Education,
                                                 Experience, Has, Patent,
                                                 Project, Publication, Skill,
-                                                PlacementStatus, NotifyStudent)
+                                                PlacementStatus, NotifyStudent,
+                                                PlacementRecord, ChairmanVisit)
 
 class SkillSerializer(serializers.ModelSerializer):
 
@@ -82,3 +82,54 @@ class PlacementStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlacementStatus
         fields = ('notify_id', 'invitation', 'placed', 'timestamp', 'no_of_days')
+
+
+class PlacementRecordSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PlacementRecord
+        fields = ('id', 'placement_type', 'name', 'ctc', 'year', 'test_score', 'test_type')
+
+
+class PlacementRecordCreateSerializer(serializers.Serializer):
+    placement_type = serializers.ChoiceField(choices=PlacementRecord._meta.get_field('placement_type').choices)
+    name = serializers.CharField(max_length=100)
+    ctc = serializers.DecimalField(max_digits=5, decimal_places=2, required=False)
+    year = serializers.IntegerField()
+    test_score = serializers.IntegerField(required=False, allow_null=True)
+    test_type = serializers.CharField(max_length=30, required=False, allow_blank=True)
+
+    def validate_year(self, value):
+        if value < 2000:
+            raise serializers.ValidationError('Year must be >= 2000')
+        return value
+
+    def validate_ctc(self, value):
+        if value < 0:
+            raise serializers.ValidationError('CTC cannot be negative')
+        return value
+
+
+class ChairmanVisitSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChairmanVisit
+        fields = ('id', 'company_name', 'location', 'visiting_date', 'description', 'timestamp')
+
+
+class ChairmanVisitCreateSerializer(serializers.Serializer):
+    company_name = serializers.CharField(max_length=100)
+    location = serializers.CharField(max_length=100)
+    visiting_date = serializers.DateField()
+    description = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_company_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError('Company name is required')
+        return value.strip()
+
+
+class PlacementStatisticsSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    total_records = serializers.IntegerField()
+    avg_ctc = serializers.DecimalField(max_digits=5, decimal_places=2, allow_null=True)
