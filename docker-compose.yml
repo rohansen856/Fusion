@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+    restart: no
     volumes:
       - .:/home/app
     ports:

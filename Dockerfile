@@ -18,10 +18,13 @@ ENV PYTHONUNBUFFERED 1
 COPY requirements.txt $FUSION_HOME
 
 # install dependencies  
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir pip==24.0 && pip install -r requirements.txt
 
 # copy api directory to docker's work directory. 
 COPY . $FUSION_HOME
+
+# fix line endings for docker-entrypoint.sh
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 
 # port where the Django app runs  
 EXPOSE 8000

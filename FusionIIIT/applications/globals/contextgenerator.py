@@ -16,11 +16,11 @@ from applications.academic_information.models import Student
 from applications.globals.forms import IssueForm, WebFeedbackForm
 from applications.globals.models import (ExtraInfo, Feedback, HoldsDesignation,
                                          Issue, IssueImage, Faculty)
-from applications.placement_cell.forms import (AddAchievement, AddCourse,
-                                               AddEducation, AddExperience,
-                                               AddPatent, AddProfile, AddConference,
-                                               AddProject, AddPublication,
-                                               AddSkill, AddReference, AddExtracurricular)
+from applications.globals.forms import (AddAchievement, AddCourse,
+                                        AddEducation, AddExperience,
+                                        AddPatent, AddProfile, AddConference,
+                                        AddProject, AddPublication,
+                                        AddSkill, AddReference, AddExtracurricular)
 from applications.placement_cell.models import (Achievement, Course, Education, Conference,
                                                 Experience, Has, Patent, Extracurricular,
                                                 Project, Publication, Skill, Reference, PlacementStatus)

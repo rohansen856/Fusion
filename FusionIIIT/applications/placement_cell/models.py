@@ -435,3 +435,15 @@ class RecruiterCompanyAccess(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.recruiter.username, self.company_name)
+
+
+class Announcement(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+

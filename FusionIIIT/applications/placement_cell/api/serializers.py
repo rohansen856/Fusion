@@ -4,7 +4,9 @@ from applications.placement_cell.models import (Achievement, Course, Education,
                                                 Experience, Has, Patent,
                                                 Project, Publication, Skill,
                                                 PlacementStatus, NotifyStudent,
-                                                PlacementRecord, ChairmanVisit)
+                                                PlacementRecord, ChairmanVisit,
+                                                CompanyDetails, PlacementSchedule,
+                                                PlacementApplication, StudentPlacement, Announcement)
 
 class SkillSerializer(serializers.ModelSerializer):
 
@@ -133,3 +135,49 @@ class PlacementStatisticsSerializer(serializers.Serializer):
     year = serializers.IntegerField()
     total_records = serializers.IntegerField()
     avg_ctc = serializers.DecimalField(max_digits=5, decimal_places=2, allow_null=True)
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = '__all__'
+
+
+class AnnouncementCreateSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200)
+    content = serializers.CharField(style={'base_template': 'textarea.html'})
+    is_published = serializers.BooleanField(default=True)
+
+    def validate_title(self, value):
+        if not value.strip():
+            raise serializers.ValidationError('Title is required')
+        return value.strip()
+
+
+class PlacementApplicationSerializer(serializers.ModelSerializer):
+    student = serializers.StringRelatedField() # Or nested StudentProfileSerializer
+    record = PlacementRecordSerializer()
+
+    class Meta:
+        model = PlacementApplication
+        fields = ('id', 'student', 'record', 'recruiter_status', 'status_updated_at', 'created_at')
+
+
+class CompanyDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyDetails
+        fields = '__all__'
+
+
+class PlacementScheduleSerializer(serializers.ModelSerializer):
+    notify_id = NotifyStudentSerializer()
+    role = serializers.StringRelatedField()
+
+    class Meta:
+        model = PlacementSchedule
+        fields = '__all__'
+
+class StudentPlacementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentPlacement
+        fields = '__all__'

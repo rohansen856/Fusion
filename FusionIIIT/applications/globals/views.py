@@ -17,11 +17,11 @@ from applications.globals.forms import IssueForm, WebFeedbackForm
 from applications.globals.models import (ExtraInfo, Feedback, HoldsDesignation,
                                          Issue, IssueImage, DepartmentInfo)
 from applications.gymkhana.views import coordinator_club
-from applications.placement_cell.forms import (AddAchievement, AddCourse,
-                                               AddEducation, AddExperience,
-                                               AddPatent, AddProfile,
-                                               AddProject, AddPublication,
-                                               AddSkill)
+from applications.globals.forms import (AddAchievement, AddCourse,
+                                        AddEducation, AddExperience,
+                                        AddPatent, AddProfile,
+                                        AddProject, AddPublication,
+                                        AddSkill)
 from applications.placement_cell.models import (Achievement, Course, Education,
                                                 Experience, Has, Patent,
                                                 Project, Publication, Skill, PlacementStatus)
